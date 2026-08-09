@@ -171,6 +171,14 @@ void VideoOutput::Render() {
             {MPV_RENDER_PARAM_INVALID, nullptr},
         };
         mpv_render_context_render(render_context_, params);
+uint32_t* p =
+    reinterpret_cast<uint32_t*>(pixel_buffer_.get());
+
+printf(
+"after render: %08x %08x %08x\n",
+p[0],
+p[100],
+p[1000]);
       });
     }
     // S/W
