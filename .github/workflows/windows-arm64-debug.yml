@@ -14,11 +14,17 @@ jobs:
       - uses: actions/checkout@v7
         with:
           submodules: "true"
-          fetch-depth: 0
       - uses: subosito/flutter-action@v2
         with:
           channel: "master"
           flutter-version: 3.44.8
+      - name: Setup libmpv for Windows
+        run: |
+          curl -LO https://github.com/bggRGjQaUbCoE/mpv-winbuild-cmake/releases/download/20260607/mpv-dev-x86_64-20260607-git-43b14a4.7z
+          cmake -E tar x mpv-dev-x86_64-20260607-git-43b14a4.7z libmpv-2.dll
+        shell: cmd
+      - run: dart pub get
+      - run: dart test
       - run: flutter pub get
       - run: flutter build windows --debug --verbose
       - name: Upload PDB files
