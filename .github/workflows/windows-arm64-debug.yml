@@ -4,6 +4,30 @@ on:
   workflow_dispatch:
 
 jobs:
+  media_kit-tests-windows:
+    name: package:media_kit tests (Windows)
+    runs-on: windows-11-arm
+    defaults:
+      run:
+        working-directory: media_kit
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: "true"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "master"
+          cache: true
+          flutter-version: 3.44.8
+
+      - name: Setup libmpv for Windows
+        run: |
+          curl -LO https://github.com/bggRGjQaUbCoE/mpv-winbuild-cmake/releases/download/20260607/mpv-dev-x86_64-20260607-git-43b14a4.7z
+          cmake -E tar x mpv-dev-x86_64-20260607-git-43b14a4.7z libmpv-2.dll
+        shell: cmd
+
+      - run: dart pub get
+      - run: dart test
   windows-arm64-debug:
     name: Build Windows ARM64 Debug
     runs-on: windows-11-arm
@@ -14,15 +38,12 @@ jobs:
       - uses: actions/checkout@v7
         with:
           submodules: "true"
+          cache: true
       - uses: subosito/flutter-action@v2
         with:
           channel: "master"
           flutter-version: 3.44.8
-      - name: Setup libmpv for Windows
-        run: |
-          curl -LO https://github.com/bggRGjQaUbCoE/mpv-winbuild-cmake/releases/download/20260607/mpv-dev-x86_64-20260607-git-43b14a4.7z
-          cmake -E tar x mpv-dev-x86_64-20260607-git-43b14a4.7z libmpv-2.dll
-        shell: cmd
+
       - run: flutter pub get
       - run: flutter build windows --debug --verbose
       - name: Upload PDB files
