@@ -1,0 +1,27 @@
+name: Windows ARM64 Debug Build
+
+on:
+  workflow_dispatch:              # 允许手动触发
+
+jobs:
+  windows-arm64-debug:
+    name: Build Windows ARM64 Debug
+    runs-on: windows-11-arm
+    defaults:
+      run:
+        working-directory: media_kit_test
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: "true"
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: "master"
+      - run: flutter pub get
+      - run: flutter build windows --debug --verbose
+      - name: Upload PDB files
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-arm64-debug-pdb
+          path: media_kit_test/build/windows/arm64/runner/Debug/*.pdb
+          if-no-files-found: error
