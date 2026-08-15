@@ -1,7 +1,7 @@
 name: Windows ARM64 Debug Build
 
 on:
-  workflow_dispatch:              # 允许手动触发
+  workflow_dispatch:
 
 jobs:
   windows-arm64-debug:
@@ -11,9 +11,10 @@ jobs:
       run:
         working-directory: media_kit_test
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v7
         with:
           submodules: "true"
+          fetch-depth: 0
       - uses: subosito/flutter-action@v2
         with:
           channel: "master"
@@ -21,7 +22,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build windows --debug --verbose
       - name: Upload PDB files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: windows-arm64-debug-pdb
           path: media_kit_test/build/windows/arm64/runner/Debug/*.pdb
