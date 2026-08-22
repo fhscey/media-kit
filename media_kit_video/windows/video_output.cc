@@ -408,6 +408,13 @@ int64_t VideoOutput::GetVideoWidth() {
       // NOTE: Multiply before dividing, otherwise integer division yields 0
       // for portrait videos (width < height), which produces a black frame.
       return width * SW_RENDERING_MAX_HEIGHT / height;
+    }
+  }
+
+  return width;
+}
+
+int64_t VideoOutput::GetVideoHeight() {
   // Fixed height.
   if (height_) {
     return height_.value();
@@ -452,3 +459,8 @@ int64_t VideoOutput::GetVideoWidth() {
       // NOTE: Multiply before dividing, otherwise integer division yields 0
       // for portrait videos (height < width), which produces a black frame.
       return height * SW_RENDERING_MAX_WIDTH / width;
+    }
+  }
+
+  return height;
+}
