@@ -78,6 +78,12 @@ class ANGLESurfaceManager {
   ID3D11DeviceContext* d3d_11_device_context_ = nullptr;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> internal_d3d_11_texture_2D_;
   Microsoft::WRL::ComPtr<ID3D11Texture2D> d3d_11_texture_2D_;
+  // Used to wait until |CopyResource| in |Read| has actually completed on the
+  // GPU before handing the shared texture to Flutter. Without this, Flutter
+  // (running on its own D3D11 device/thread) can read the destination texture
+  // before the copy has finished, producing a blank/black frame. This
+  // especially manifests on Windows ARM64 with larger (>=720p) textures.
+  Microsoft::WRL::ComPtr<ID3D11Query> copy_complete_query_ = nullptr;
   // ANGLE
   EGLSurface surface_ = EGL_NO_SURFACE;
   EGLDisplay display_ = EGL_NO_DISPLAY;

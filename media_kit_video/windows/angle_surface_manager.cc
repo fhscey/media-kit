@@ -61,7 +61,24 @@ void ANGLESurfaceManager::Read() {
   if (d3d_11_device_context_ != nullptr) {
     d3d_11_device_context_->CopyResource(d3d_11_texture_2D_.Get(),
                                          internal_d3d_11_texture_2D_.Get());
+    // Flush & wait until the copy has actually been executed on the GPU.
+    // Flutter opens the shared texture through its own D3D11 device & reads it
+    // on a different thread. Without waiting for GPU completion here, Flutter
+    // can observe the destination texture before the copy finished, which
+    // results in a blank/black frame. This is especially reproducible on
+    // Windows ARM64 with larger (>=720p) textures where the copy takes longer.
+    if (copy_complete_query_ != nullptr) {
+      d3d_11_device_context_->End(copy_complete_query_.Get());
+    }
     d3d_11_device_context_->Flush();
+    if (copy_complete_query_ != nullptr) {
+      // Block until the GPU has signalled that all preceding work (including
+      // |CopyResource|) is complete.
+      while (d3d_11_device_context_->GetData(copy_complete_query_.Get(),
+                                             nullptr, 0, 0) == S_FALSE) {
+        ::Sleep(0);
+      }
+    }
   }
   ::ReleaseMutex(mutex_);
 }
@@ -176,6 +193,15 @@ bool ANGLESurfaceManager::CreateD3DTexture() {
         static_cast<UINT>(feature_levels.size()), D3D11_SDK_VERSION,
         &d3d_11_device_, 0, &d3d_11_device_context_);
     CHECK_HRESULT("D3D11CreateDevice");
+
+    // Create a one-shot event query used to synchronize the |CopyResource|
+    // performed in |Read| before the shared texture is consumed by Flutter.
+    // This prevents reading the destination texture before the GPU copy has
+    // actually finished (see |Read|).
+    D3D11_QUERY_DESC query_desc{};
+    query_desc.Query = D3D11_QUERY_EVENT;
+    hr = d3d_11_device_->CreateQuery(&query_desc, &copy_complete_query_);
+    CHECK_HRESULT("ID3D11Device::CreateQuery");
   }
 
   Microsoft::WRL::ComPtr<IDXGIDevice> dxgi_device = nullptr;
