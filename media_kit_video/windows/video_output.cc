@@ -405,14 +405,9 @@ int64_t VideoOutput::GetVideoWidth() {
       return SW_RENDERING_MAX_WIDTH;
     }
     if (height >= SW_RENDERING_MAX_HEIGHT) {
-      return width / height * SW_RENDERING_MAX_HEIGHT;
-    }
-  }
-
-  return width;
-}
-
-int64_t VideoOutput::GetVideoHeight() {
+      // NOTE: Multiply before dividing, otherwise integer division yields 0
+      // for portrait videos (width < height), which produces a black frame.
+      return width * SW_RENDERING_MAX_HEIGHT / height;
   // Fixed height.
   if (height_) {
     return height_.value();
@@ -454,9 +449,6 @@ int64_t VideoOutput::GetVideoHeight() {
       return SW_RENDERING_MAX_HEIGHT;
     }
     if (width >= SW_RENDERING_MAX_WIDTH) {
-      return height / width * SW_RENDERING_MAX_WIDTH;
-    }
-  }
-
-  return height;
-}
+      // NOTE: Multiply before dividing, otherwise integer division yields 0
+      // for portrait videos (height < width), which produces a black frame.
+      return height * SW_RENDERING_MAX_WIDTH / width;
