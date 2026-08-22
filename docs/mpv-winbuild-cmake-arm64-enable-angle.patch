@@ -1,0 +1,22 @@
+From: media-kit arm64 hw-accel enablement
+Subject: enable ANGLE on aarch64 so media_kit H/W path works on Windows ARM64
+
+Apply in your mpv-winbuild-cmake checkout (packages/... is configured via
+cmake/packages_check.cmake). Replace the aarch64 mpv_gl setting.
+
+--- a/cmake/packages_check.cmake
++++ b/cmake/packages_check.cmake
+@@ -... +... @@ elseif(TARGET_CPU STREQUAL "aarch64")
+     set(dlltool_image "arm64")
+     set(vulkan_asm "-DUSE_GAS=ON")
+     set(openssl_target "mingwarm64")
+     set(openssl_ec_opt "enable-ec_nistp_64_gcc_128")
+     set(libvpx_target "arm64-win64-gcc")
+-    set(mpv_gl "-Dgl=disabled -Degl-angle=disabled")
++    # Enable OpenGL/ANGLE so media_kit's hardware-accelerated rendering
++    # (MPV_RENDER_API_TYPE_OPENGL) initializes on Windows ARM64. Without this,
++    # mpv_render_context_create(OPENGL) fails and media_kit falls back to SW
++    # (which, for large portrait video, also used to hit an integer-division
++    # bug that has since been fixed upstream in media_kit).
++    set(mpv_gl "-Dgl=enabled -Degl-angle=enabled")
+ endif()
